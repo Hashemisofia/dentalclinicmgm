@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dental Clinic Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@tailwindcss/browser@latest"></script>
+    <style>
+        /* Custom CSS for toast messages */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #4caf50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            font-size: 1rem;
+            z-index: 1000;
+            opacity: 1;
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+        }
+
+        .toast-warning {
+            background-color: #f39c12;
+        }
+
+        .toast-info {
+            background-color: #3498db;
+        }
+
+        .toast-success {
+            background-color: #2ecc71;
+        }
+
+        .toast.fade-out {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 8px;
+            position: relative;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: #333;
+        }
+
+        .close-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: #000;
+            text-decoration: none;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            height: 100px;
+        }
+
+        .form-actions {
+            text-align: right;
+            margin-top: 20px;
+        }
+
+        .btn-primary, .btn-secondary {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #45a049;
+        }
+
+        .btn-secondary {
+            background-color: #e0e0e0;
+            color: #333;
+            margin-right: 10px;
+        }
+
+        .btn-secondary:hover {
+            background-color: #ccc;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .table thead th {
+            background-color: #f0f0f0;
+            color: #333;
+            font-weight: 600;
+            padding: 12px;
+            text-align: left;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .table tbody td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f0f0f0;
+        }
+
+        .table tfoot th {
+            background-color: #f0f0f0;
+            color: #333;
+            font-weight: 600;
+            padding: 12px;
+            text-align: left;
+            border-top: 2px solid #ddd;
+        }
+
+         @media (max-width: 768px) {
+            .table thead {
+                display: none;
+            }
+            .table tbody td {
+                display: block;
+                width: 100%;
+                text-align: right;
+                padding-left: 50%;
+                position: relative;
+            }
+            .table tbody td::before {
+                content: attr(data-label);
+                position: absolute;
+                left: 0;
+                width: 50%;
+                text-align: left;
+                font-weight: 600;
+                color: #555;
+            }
+            .form-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .btn-primary, .btn-secondary {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+            .modal-content {
+                width: 95%;
+                margin: 5% auto;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-inter antialiased">
+    <div class="container mx-auto p-6">
+        <h1 class="text-3xl font-semibold text-gray-800 text-center mb-8">Dental Clinic Management System</h1>
+
+        <div id="appointment-section" class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold text-gray-700">Appointments</h2>
+                <button id="add-appointment-button" class="btn-primary">Add Appointment</button>
+            </div>
+            <div id="appointment-table-container" class="table-container">
+                <table id="appointment-table" class="table">
+                    <thead>
+                        <tr>
+                            <th>Patient Name</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Service</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="6" class="text-center py-4">No appointments found.</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="6">Total Appointments: <span id="total-appointments">0</span></th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <div id="patient-section" class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold text-gray-700">Patients</h2>
+                <button id="add-patient-button" class="btn-primary">Add Patient</button>
+            </div>
+            <div id="patient-table-container" class="table-container">
+                <table id="patient-table" class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Date of Birth</th>
+                            <th>Phone</th>
+                            <th>Email</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="5" class="text-center py-4">No patients found.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="service-section" class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold text-gray-700">Services</h2>
+                <button id="add-service-button" class="btn-primary">Add Service</button>
+            </div>
+            <div id="service-table-container" class="table-container">
+                <table id="service-table" class="table">
+                    <thead>
+                        <tr>
+                            <th>Service Name</th>
+                            <th>Description</th>
+                            <th>Price</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="4" class="text-center py-4">No services found.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="invoice-payment-section" class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold text-gray-700">Invoices and Payments</h2>
+                <button id="add-invoice-button" class="btn-primary">Add Invoice</button>
+            </div>
+            <div id="invoice-table-container" class="table-container">
+                <table id="invoice-table" class="table">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Patient Name</th>
+                            <th>Date</th>
+                            <th>Service</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="7" class="text-center py-4">No invoices found.</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="7">Total Invoices: <span id="total-invoices">0</span> | Total Amount: $<span id="total-amount">0.00</span></th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="add-appointment-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Appointment</h2>
+                <span class="close-button">&times;</span>
+            </div>
+            <form id="add-appointment-form">
+                <div class="form-group">
+                    <label for="patient-name">Patient Name:</label>
+                    <select id="patient-name" name="patient-name" required>
+                        <option value="">Select Patient</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="appointment-date">Date:</label>
+                    <input type="date" id="appointment-date" name="appointment-date" required>
+                </div>
+                <div class="form-group">
+                    <label for="appointment-time">Time:</label>
+                    <input type="time" id="appointment-time" name="appointment-time" required>
+                </div>
+                <div class="form-group">
+                    <label for="appointment-service">Service:</label>
+                    <select id="appointment-service" name="appointment-service" required>
+                        <option value="">Select Service</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="appointment-status">Status:</label>
+                    <select id="appointment-status" name="appointment-status">
+                        <option value="Scheduled">Scheduled</option>
+                        <option value="Confirmed">Confirmed</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary close-button">Cancel</button>
+                    <button type="submit" class="btn-primary">Add Appointment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="add-patient-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Patient</h2>
+                <span class="close-button">&times;</span>
+            </div>
+            <form id="add-patient-form">
+                <div class="form-group">
+                    <label for="patient-first-name">First Name:</label>
+                    <input type="text" id="patient-first-name" name="patient-first-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="patient-last-name">Last Name:</label>
+                    <input type="text" id="patient-last-name" name="patient-last-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="patient-dob">Date of Birth:</label>
+                    <input type="date" id="patient-dob" name="patient-dob" required>
+                </div>
+                <div class="form-group">
+                    <label for="patient-phone">Phone:</label>
+                    <input type="tel" id="patient-phone" name="patient-phone" required>
+                </div>
+                <div class="form-group">
+                    <label for="patient-email">Email:</label>
+                    <input type="email" id="patient-email" name="patient-email" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary close-button">Cancel</button>
+                    <button type="submit" class="btn-primary">Add Patient</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="add-service-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Service</h2>
+                <span class="close-button">&times;</span>
+            </div>
+            <form id="add-service-form">
+                <div class="form-group">
+                    <label for="service-name">Service Name:</label>
+                    <input type="text" id="service-name" name="service-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="service-description">Description:</label>
+                    <textarea id="service-description" name="service-description" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="service-price">Price:</label>
+                    <input type="number" id="service-price" name="service-price" required min="0">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary close-button">Cancel</button>
+                    <button type="submit" class="btn-primary">Add Service</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="add-invoice-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Invoice</h2>
+                <span class="close-button">&times;</span>
+            </div>
+            <form id="add-invoice-form">
+                <div class="form-group">
+                    <label for="invoice-patient-name">Patient Name:</label>
+                    <select id="invoice-patient-name" name="invoice-patient-name" required>
+                        <option value="">Select Patient</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="invoice-date">Date:</label>
+                    <input type="date" id="invoice-date" name="invoice-date" required>
+                </div>
+                <div class="form-group">
+                    <label for="invoice-service">Service:</label>
+                     <select id="invoice-service" name="invoice-service" required>
+                        <option value="">Select Service</option>
+                    </select>
+                </div>
+                 <div class="form-group">
+                    <label for="invoice-amount">Amount:</label>
+                    <input type="number" id="invoice-amount" name="invoice-amount" required min="0">
+                </div>
+                <div class="form-group">
+                    <label for="invoice-status">Status:</label>
+                    <select id="invoice-status" name="invoice-status">
+                        <option value="Pending">Pending</option>
+                        <option value="Paid">Paid</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary close-button">Cancel</button>
+                    <button type="submit" class="btn-primary">Add Invoice</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="view-payments-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>View Payments</h2>
+                <span class="close-button">&times;</span>
+            </div>
+            <div id="payment-details-container">
+                 <p>No payments recorded for this invoice.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let appointments = [
+            { patientName: 'John Doe', date: '2024-03-10', time: '10:00 AM', service: 'Cleaning', status: 'Scheduled' },
+            { patientName: 'Jane Smith', date: '2024-03-12', time: '02:00 PM', service: 'Consultation', status: 'Confirmed' },
+        ];
+
+        let patients = [
+            { firstName: 'John', lastName: 'Doe', dob: '1990-05-15', phone: '123-456-7890', email: 'john.doe@example.com' },
+            { firstName: 'Jane', lastName: 'Smith', dob: '1985-10-22', phone: '987-654-3210', email: 'jane.smith@example.com' },
+        ];
+
+        let services = [
+          { name: 'Cleaning', description: 'Professional teeth cleaning', price: 50.00 },
+          { name: 'Consultation', description: 'Initial dental examination', price: 25.00 },
+        ];
+
+        let invoices = [
+            { invoiceNumber: 'INV-001', patientName: 'John Doe', date: '2024-03-10', service: 'Cleaning', amount: 50.00, status: 'Pending' },
+            { invoiceNumber: 'INV-002', patientName: 'Jane Smith', date: '2024-03-12', service: 'Consultation', amount: 25.00, status: 'Paid' },
+        ];
+
+        let payments = [
+            { invoiceNumber: 'INV-002', paymentDate: '2024-03-12', paymentAmount: 25.00, paymentMethod: 'Cash' },
+        ];
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('fade-out');
+                setTimeout(() => toast.remove(), 500);
+            }, 2000);
+        }
+
+        function renderAppointments() {
+            const appointmentTableBody = document.querySelector('#appointment-table tbody');
+            appointmentTableBody.innerHTML = '';
+            if (appointments.length === 0) {
+                appointmentTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4">No appointments found.</td></tr>';
+            } else {
+                appointments.forEach(appointment => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td data-label="Patient Name">${appointment.patientName}</td>
+                        <td data-label="Date">${appointment.date}</td>
+                        <td data-label="Time">${appointment.time}</td>
+                        <td data-label="Service">${appointment.service}</td>
+                        <td data-label="Status">${appointment.status}</td>
+                        <td data-label="Actions">
+                            <button class="btn-primary btn-sm mr-1">Edit</button>
+                            <button class="btn-secondary btn-sm">Delete</button>
+                        </td>
+                    `;
+                    appointmentTableBody.appendChild(row);
+                });
+            }
+            document.getElementById('total-appointments').textContent = appointments.length;
+             // Populate service dropdown in add appointment form
+            const serviceSelect = document.getElementById('appointment-service');
+            serviceSelect.innerHTML = '<option value="">Select Service</option>';
+            services.forEach(service => {
+                const option = document.createElement('option');
+                option.value = service.name;
+                option.textContent = service.name;
+                serviceSelect.appendChild(option);
+            });
+        }
+
+        function renderPatients() {
+            const patientTableBody = document.querySelector('#patient-table tbody');
+            patientTableBody.innerHTML = '';
+            if (patients.length === 0) {
+                patientTableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4">No patients found.</td></tr>';
+            } else {
+                patients.forEach(patient => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td data-label="Name">${patient.firstName} ${patient.lastName}</td>
+                        <td data-label="Date of Birth">${patient.dob}</td>
+                        <td data-label="Phone">${patient.phone}</td>
+                        <td data-label="Email">${patient.email}</td>
+                        <td data-label="Actions">
+                            <button class="btn-primary btn-sm mr-1">Edit</button>
+                            <button class="btn-secondary btn-sm">Delete</button>
+                        </td>
+                    `;
+                    patientTableBody.appendChild(row);
+                });
+            }
+             // Populate patient dropdown in add appointment form
+            const patientNameSelect = document.getElementById('patient-name');
+            patientNameSelect.innerHTML = '<option value="">Select Patient</option>';
+            patients.forEach(patient => {
+                const option = document.createElement('option');
+                option.value = `${patient.firstName} ${patient.lastName}`;
+                option.textContent = `${patient.firstName} ${patient.lastName}`;
+                patientNameSelect.appendChild(option);
+            });
+            // Populate patient dropdown in add invoice form
+            const invoicePatientNameSelect = document.getElementById('invoice-patient-name');
+            invoicePatientNameSelect.innerHTML = '<option value="">Select Patient</option>';
+            patients.forEach(patient => {
+                const option = document.createElement('option');
+                option.value = `${patient.firstName} ${patient.lastName}`;
+                option.textContent = `${patient.firstName} ${patient.lastName}`;
+                invoicePatientNameSelect.appendChild(option);
+            });
+            // Populate service dropdown in add invoice form
+            const invoiceServiceSelect = document.getElementById('invoice-service');
+            invoiceServiceSelect.innerHTML = '<option value="">Select Service</option>';
+            services.forEach(service => {
+                const option = document.createElement('option');
+                option.value = service.name;
+                option.textContent = service.name;
+                invoiceServiceSelect.appendChild(option);
+            });
+        }
+
+        function renderServices() {
+            const serviceTableBody = document.querySelector('#service-table tbody');
+            serviceTableBody.innerHTML = '';
+            if (services.length === 0) {
+                serviceTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4">No services found.</td></tr>';
+            } else {
+                services.forEach(service => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td data-label="Service Name">${service.name}</td>
+                        <td data-label="Description">${service.description}</td>
+                        <td data-label="Price">$${service.price.toFixed(2)}</td>
+                        <td data-label="Actions">
+                            <button class="btn-primary btn-sm mr-1">Edit</button>
+                            <button class="btn-secondary btn-sm">Delete</button>
+                        </td>
+                    `;
+                    serviceTableBody.appendChild(row);
+                });
+            }
+        }
+
+        function renderInvoices() {
+            const invoiceTableBody = document.querySelector('#invoice-table tbody');
+            invoiceTableBody.innerHTML = '';
+            let totalAmount = 0;
+            if (invoices.length === 0) {
+                invoiceTableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4">No invoices found.</td></tr>';
+            } else {
+                invoices.forEach(invoice => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td data-label="Invoice #">${invoice.invoiceNumber}</td>
+                        <td data-label="Patient Name">${invoice.patientName}</td>
+                        <td data-label="Date">${invoice.date}</td>
+                        <td data-label="Service">${invoice.service}</td>
+                        <td data-label="Amount">$${invoice.amount.toFixed(2)}</td>
+                        <td data-label="Status">${invoice.status}</td>
+                        <td data-label="Actions">
+                            <button class="btn-primary btn-sm mr-1 view-payments-button" data-invoice-number="${invoice.invoiceNumber}">View Payments</button>
+                            <button class="btn-secondary btn-sm">Delete</button>
+                        </td>
+                    `;
+                    invoiceTableBody.appendChild(row);
+                    totalAmount += invoice.amount;
+                });
+            }
+            document.getElementById('total-invoices').textContent = invoices.length;
+            document.getElementById('total-amount').textContent = totalAmount.toFixed(2);
+        }
+
+        const addAppointmentModal = document.getElementById('add-appointment-modal');
+        const addPatientModal = document.getElementById('add-patient-modal');
+        const addServiceModal = document.getElementById('add-service-modal');
+        const addInvoiceModal = document.getElementById('add-invoice-modal');
+        const viewPaymentsModal = document.getElementById('view-payments-modal');
+
+        const addAppointmentButton = document.getElementById('add-appointment-button');
+        const addPatientButton = document.getElementById('add-patient-button');
+        const addServiceButton = document.getElementById('add-service-button');
+        const addInvoiceButton = document.getElementById('add-invoice-button');
+        const closeButtons = document.querySelectorAll('.close-button');
+
+        addAppointmentButton.addEventListener('click', () => {
+            addAppointmentModal.style.display = 'block';
+        });
+
+        addPatientButton.addEventListener('click', () => {
+            addPatientModal.style.display = 'block';
+        });
+
+        addServiceButton.addEventListener('click', () => {
+            addServiceModal.style.display = 'block';
+        });
+
+        addInvoiceButton.addEventListener('click', () => {
+            addInvoiceModal.style.display = 'block';
+        });
+
+        closeButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                addAppointmentModal.style.display = 'none';
+                addPatientModal.style.display = 'none';
+                addServiceModal.style.display = 'none';
+                addInvoiceModal.style.display = 'none';
+                viewPaymentsModal.style.display = 'none';
+            });
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        });
+
+        const addAppointmentForm = document.getElementById('add-appointment-form');
+        addAppointmentForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const patientName = document.getElementById('patient-name').value;
+            const date = document.getElementById('appointment-date').value;
+            const time = document.getElementById('appointment-time').value;
+            const service = document.getElementById('appointment-service').value;
+            const status = document.getElementById('appointment-status').value;
+
+            if (!patientName || !date || !time || !service) {
+                showToast('Please fill in all required fields.', 'warning');
+                return;
+            }
+
+            appointments.push({ patientName, date, time, service, status });
+            renderAppointments();
+            addAppointmentModal.style.display = 'none';
+            addAppointmentForm.reset();
+            showToast('Appointment added successfully!', 'success');
+        });
+
+        const addPatientForm = document.getElementById('add-patient-form');
+        addPatientForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const firstName = document.getElementById('patient-first-name').value;
+            const lastName = document.getElementById('patient-last-name').value;
+            const dob = document.getElementById('patient-dob').value;
+            const phone = document.getElementById('patient-phone').value;
+            const email = document.getElementById('patient-email').value;
+
+            if (!firstName || !lastName || !dob || !phone || !email) {
+                showToast('Please fill in all required fields.', 'warning');
+                return;
+            }
+
+            patients.push({ firstName, lastName, dob, phone, email });
+            renderPatients();
+            addPatientModal.style.display = 'none';
+            addPatientForm.reset();
+            showToast('Patient added successfully!', 'success');
+        });
+
+        const addServiceForm = document.getElementById('add-service-form');
+        addServiceForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const name = document.getElementById('service-name').value;
+            const description = document.getElementById('service-description').value;
+            const price = parseFloat(document.getElementById('service-price').value);
+
+            if (!name || !description || isNaN(price) || price < 0) {
+                showToast('Please fill in all fields with valid values.', 'warning');
+                return;
+            }
+
+            services.push({ name, description, price });
+            renderServices();
+            addServiceModal.style.display = 'none';
+            addServiceForm.reset();
+            showToast('Service added successfully!', 'success');
+        });
+
+        const addInvoiceForm = document.getElementById('add-invoice-form');
+        addInvoiceForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const patientName = document.getElementById('invoice-patient-name').value;
+            const date = document.getElementById('invoice-date').value;
+            const service = document.getElementById('invoice-service').value;
+            const amount = parseFloat(document.getElementById('invoice-amount').value);
+            const status = document.getElementById('invoice-status').value;
+
+            if (!patientName || !date || !service || isNaN(amount) || amount < 0) {
+                showToast('Please fill in all required fields with valid values.', 'warning');
+                return;
+            }
+
+             const invoiceNumber = `INV-${Math.floor(Math.random() * 1000000)}`;
+            invoices.push({ invoiceNumber, patientName, date, service, amount, status });
+            renderInvoices();
+            addInvoiceModal.style.display = 'none';
+            addInvoiceForm.reset();
+            showToast('Invoice added successfully!', 'success');
+        });
+
+        document.getElementById('invoice-table').addEventListener('click', (event) => {
+            const target = event.target;
+            if (target.classList.contains('view-payments-button')) {
+                const invoiceNumber = target.dataset.invoiceNumber;
+                viewPayments(invoiceNumber);
+            }
+        });
+
+        function viewPayments(invoiceNumber) {
+            const paymentDetailsContainer = document.getElementById('payment-details-container');
+            paymentDetailsContainer.innerHTML = '';
+            const relatedPayments = payments.filter(payment => payment.invoiceNumber === invoiceNumber);
+
+            if (relatedPayments.length === 0) {
+                paymentDetailsContainer.innerHTML = `<p>No payments recorded for invoice ${invoiceNumber}.</p>`;
+            } else {
+                let totalPaid = 0;
+                const ul = document.createElement('ul');
+                relatedPayments.forEach(payment => {
+                    const li = document.createElement('li');
+                    li.textContent = `Date: ${payment.paymentDate}, Amount: $${payment.paymentAmount.toFixed(2)}, Method: ${payment.paymentMethod}`;
+                    ul.appendChild(li);
+                    totalPaid += payment.paymentAmount;
+                });
+                paymentDetailsContainer.appendChild(ul);
+                paymentDetailsContainer.innerHTML += `<p>Total Paid: $${totalPaid.toFixed(2)}</p>`;
+            }
+            viewPaymentsModal.style.display = 'block';
+        }
+
+        renderAppointments();
+        renderPatients();
+        renderServices();
+        renderInvoices();
+    </script>
+</body>
+</html>
